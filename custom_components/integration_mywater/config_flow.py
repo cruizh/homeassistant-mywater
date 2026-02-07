@@ -4,16 +4,21 @@ from __future__ import annotations
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_API_TOKEN,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from slugify import slugify
 
 from .api import (
-    IntegrationBlueprintApiClient,
-    IntegrationBlueprintApiClientAuthenticationError,
-    IntegrationBlueprintApiClientCommunicationError,
-    IntegrationBlueprintApiClientError,
+    MyWaterApiClient,
+    MyWaterApiClientAuthenticationError,
+    MyWaterApiClientCommunicationError,
+    MyWaterApiClientError,
 )
 from .const import DOMAIN, LOGGER
 
@@ -32,16 +37,18 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self._test_credentials(
-                    username=user_input[CONF_USERNAME],
-                    password=user_input[CONF_PASSWORD],
+                    api_username=user_input[CONF_API_KEY],
+                    api_password=user_input[CONF_API_TOKEN],
+                    user_username=user_input[CONF_USERNAME],
+                    user_password=user_input[CONF_PASSWORD],
                 )
-            except IntegrationBlueprintApiClientAuthenticationError as exception:
+            except MyWaterApiClientAuthenticationError as exception:
                 LOGGER.warning(exception)
                 _errors["base"] = "auth"
-            except IntegrationBlueprintApiClientCommunicationError as exception:
+            except MyWaterApiClientCommunicationError as exception:
                 LOGGER.error(exception)
                 _errors["base"] = "connection"
-            except IntegrationBlueprintApiClientError as exception:
+            except MyWaterApiClientError as exception:
                 LOGGER.exception(exception)
                 _errors["base"] = "unknown"
             else:
@@ -79,11 +86,19 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=_errors,
         )
 
-    async def _test_credentials(self, username: str, password: str) -> None:
+    async def _test_credentials(
+        self,
+        api_username: str,
+        api_password: str,
+        user_username: str,
+        user_password: str,
+    ) -> None:
         """Validate credentials."""
-        client = IntegrationBlueprintApiClient(
-            username=username,
-            password=password,
+        client = MyWaterApiClient(
+            api_username=api_username,
+            api_password=api_password,
+            user_username=user_username,
+            user_password=user_password,
             session=async_create_clientsession(self.hass),
         )
         await client.async_get_data()
