@@ -22,6 +22,8 @@ from .api import (
 )
 from .const import DOMAIN, LOGGER
 
+_REPO_URL = "https://github.com/cruizh/homeassistant-mywater"
+
 
 class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Blueprint."""
@@ -83,6 +85,7 @@ class BlueprintFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                 },
             ),
+            description_placeholders={"repo_url": _REPO_URL},
             errors=_errors,
         )
 
